@@ -1,10 +1,10 @@
 import debug from 'debug';
 import Vuex, { Store, mapActions, mapGetters } from 'vuex';
-import BuildStoreNS, { shareSpace } from './BuildStoreNS';
-import { firstUppercase } from './common';
+import BuildStoreNS, { shareSpace, storeInstance } from './BuildStoreNS';
+import { is, firstUppercase } from './common';
 
-const d = debug('simplestVuex');
-const de = debug('simplestVuex:error');
+const d = debug('simplest-vuex');
+const de = debug('simplest-vuex:error');
 
 BuildStoreNS.use = (n, v) => {
   if (!BuildStoreNS[n]) {
@@ -16,21 +16,34 @@ BuildStoreNS.use = (n, v) => {
   }
 }
 
-BuildStoreNS.vuexRegister = store => new Store(store);
+export const createSimplestVuexStore = () => new Store(storeInstance);
+
+export {
+  Vuex,
+  Store,
+  mapActions,
+  mapGetters,
+};
 
 export const install = (Vue, options = {}) => {
-  const { onCreateStoreBefore } = options;
-
-  if (is(onCreateStoreBefore, Function)) {
-    onCreateStoreBefore(BuildStoreNS, { Vuex, Store, mapActions, mapGetters });
-  }
+  const { onEnrollStoreBefore } = options;
 
   Vue.use(Vuex);
+
+  if (is(onEnrollStoreBefore, Function)) {
+    onEnrollStoreBefore(BuildStoreNS, { Vuex, Store, mapActions, mapGetters });
+  }
+
+  // if (is(Vue.prototype.$store, 'undefined')) {
+  //   Vue.prototype.$store = createSimplestVuexStore()
+  // } else {
+  //   throw 'simplest-vuex: $store已被注册'
+  // }
 };
 
 const toMap = (ns, names, share = {}) => {
   return !is(names, null) ? names.map(name => `${ns}${firstUppercase(name)}`) : share[ns];
-}
+};
 
 export const getters = (ns, names = null) => {
   if (!shareSpace.namespace.includes(ns) && !shareSpace.getter[ns]) {
@@ -54,7 +67,7 @@ export const actions = (ns, names = null) => {
 
   }
 
-  return mapActions(maps(ns, names, shareSpace.action));
+  return mapActions(toMap(ns, names, shareSpace.action));
 }
 
 export default install;
