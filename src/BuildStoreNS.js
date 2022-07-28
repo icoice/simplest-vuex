@@ -52,7 +52,7 @@ class BuildStoreNS {
         this.ns = ns === '' ? name : ns;
     }
 
-    getNamespace(name) {
+    getNamespace(name = '') {
         const { ns } = this;
 
         return  `${ns}${firstUppercase(name)}`;
@@ -136,7 +136,8 @@ class BuildStoreNS {
         storeInstance.actions[name] = (process, params) => {
             const actionExtend = {
                 ...process,
-
+                
+                ownerState: process.state[ns],
                 publish: nameList => loop(nameList, (v, k) => process.commit(this.getNamespace(k), v)),
                 push: (k, v) => process.commit(this.getNamespace(k), v),
                 doth: (k, payload) => process.dispatch(this.getNamespace(k), payload),
